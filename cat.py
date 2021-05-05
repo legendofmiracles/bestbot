@@ -2,11 +2,13 @@
 # INCLUDES
 ########################################################################################################################
 import aiohttp
+import praw
+import random
 
 ########################################################################################################################
 # API
 ########################################################################################################################
-async def get(animal, apiKey, mimeType):
+async def get_animal(animal, apiKey, mimeType):
     headers = {
         'x-api-key'   : apiKey,
         'Content-Type': 'application/json'
@@ -30,6 +32,19 @@ async def get(animal, apiKey, mimeType):
                 url = await response.json()
                 return url[0]['url']
 
-########################################################################################################################
-# END OF FILE
-########################################################################################################################
+
+
+async def get_keeb(bot):
+    r = praw.Reddit(
+        client_id=bot.id,
+        client_secret=bot.secret,
+        password=bot.password,
+        user_agent="Safari",
+        username=bot.username,
+    )
+
+    sr = r.subreddit("mechanicalKeyboards")
+    for i in sr.random():
+        if i.link_flair_text and i.link_flair_text.strip().lower() == "photos":
+            return i.url
+

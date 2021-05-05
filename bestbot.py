@@ -11,6 +11,7 @@ import urllib              # for find
 from requests import get   # for ip
 import discord
 from discord.ext import commands
+import cat
 
 ########################################################################################################################
 # SETUP
@@ -52,8 +53,17 @@ files = {
     'f_emoteHelix'   : 'res/emoteHelix',
     'f_currencyKey'  : 'res/currencyKey',
     'f_catKey'       : 'res/catKey',
-    'f_helixReplies' : 'res/helixReplies'
+    'f_helixReplies' : 'res/helixReplies',
+    'f_reddit'       : 'res/reddit',
 }
+
+class RedditBot:
+    ############ this is the order of the lines in the f_reddit file! ########################
+    def __init__(self, id, secret, password, username):
+        self.id = id
+        self.secret = secret
+        self.password = password
+        self.username = username
 
 if os.path.exists(files["f_blacklist"]):
     with open(files["f_blacklist"], 'r') as blacklistFile:
@@ -106,7 +116,6 @@ else:
     CURRENCY_KEY = None
 
 if os.path.exists(files["f_catKey"]):
-    import cat
     with open(files["f_catKey"], 'r') as catKeyFile:
         global CAT_KEY
         CAT_KEY = catKeyFile.read().strip('\n') # https://thecatapi.com/ or https://thedogapi.com/
@@ -120,6 +129,15 @@ if os.path.exists(files["f_helixReplies"]):
         HELIX_REPLIES = [element for element in HELIX_REPLIES if element]
 else:
     print(f'Error: {files["f_helixReplies"]} file missing')
+    sys.exit()
+
+if os.path.exists(files["f_reddit"]):
+    with open(files["f_reddit"], 'r') as helixRepliesFile:
+        global REDDIT
+        fields = open(files["f_reddit"], 'r').read().split('\n')
+        REDDIT = RedditBot(fields[0], fields[1], fields[2], fields[3])
+else:
+    print(f'Error: {files["f_reddit"]} file missing')
     sys.exit()
 
 @client.event
@@ -357,11 +375,16 @@ async def pls(context, animal = None, noarg = None):
         await context.send(f'{context.author.mention} {ERROR_REPLY}.')
         return
 
-    supported_animals = ['cat', 'dog']
+    supported_animals = ['cat', 'dog', 'keeb']
 
-    if(animal in supported_animals):
-        URL = await cat.get(animal, CAT_KEY, random.choice(['jpg', 'gif']))
-        await context.send(f'{URL}')
+    if (animal in supported_animals):
+        print(animal)
+        if animal == 'keeb':
+            URL = await cat.get_keeb(REDDIT)
+            await context.send(f'{URL}')
+        else:
+            URL = await cat.get_animal(animal, CAT_KEY, random.choice(['jpg', 'gif']))
+            await context.send(f'{URL}')
     else:
         await context.send(f'{context.author.mention} {ERROR_REPLY}.')
 
